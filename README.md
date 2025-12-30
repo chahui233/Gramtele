@@ -1,7 +1,7 @@
-# GramTele / YYTFSupportSite
+# GramTele
 
-**简介（Overview）**
-GramTele（在代码中名为 `YYTFSupportSite`）是一个基于 Jakarta EE 的在线聊天室 / 社区示例项目，包含用户注册、登录、用户资料、发布帖子、私信、好友管理以及基于 WebSocket 的实时聊天功能。本 README 针对开发者/部署者给出详细说明：依赖、数据库、构建、部署、常见问题与扩展建议。
+**简介**
+GramTele是一个基于 Jakarta EE 的在线聊天室 / 社区示例项目，包含用户注册、登录、用户资料、发布帖子、私信、好友管理以及基于 WebSocket 的实时聊天功能。本 README 针对开发者/部署者给出详细说明：依赖、数据库、构建、部署、常见问题与扩展建议。
 
 ---
 
@@ -68,10 +68,10 @@ Gramtele-main/
 │  ├─ login.jsp
 │  ├─ register.jsp
 │  └─ images/
-└─ README.md (原：非常简单)
+└─ README.md
 ```
 
-重要类（示例）
+重要类
 
 - `DBUtil.java`：数据库连接工具（在这里设置数据库 URL/用户/密码）
 - `ChatWebSocket.java`：WebSocket 后端，路径 `/chatSocket/{userId}`
@@ -265,11 +265,11 @@ CREATE TABLE friends (
 
 # 11. 安全注意事项 & 部署建议
 
-- **不要在版本控制中存储真实密码**（目前仓库里的 `DBUtil` 示例使用硬编码密码 — 请务必替换）。  
-- 对用户密码使用安全的单向哈希（例如 `bcrypt`/`argon2`），**不要直接以明文存储密码**。目前代码在 `users` 表采用明文对比（建议改进）。  
-- 对用户输入做 XSS/SQL 注入防护：项目包含 `XSSFilter`，但请确保所有 SQL 使用 `PreparedStatement`（此项目多数已使用）。  
-- 将数据库用户权限降到最小（只给应用所需权限，避免使用 root）。  
-- 上线前通过 HTTPS 提供服务（在反向代理 Nginx 或云 LB 前配置 TLS）。  
+- **不要在版本控制中存储真实密码**。  
+- 对用户密码使用安全的单向哈希（例如 `bcrypt`/`argon2`），**不要直接以明文存储密码**。目前代码在 `users` 表采用明文对比。  
+- 对用户输入做 XSS/SQL 注入防护：项目包含 `XSSFilter`，但请确保所有 SQL 使用 `PreparedStatement`。  
+- 将数据库用户权限降到最小。  
+- 上线前通过 HTTPS 提供服务。  
 - 日志与异常处理：增加统一异常处理与日志（Logback/SLF4J）以便排查问题。
 
 ---
