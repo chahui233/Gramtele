@@ -1,0 +1,221 @@
+/* 通用重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.error-msg {
+    color: #fff;
+    background-color: #e74c3c;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+body {
+    font-family: "Segoe UI", "PingFang SC", sans-serif;
+    background: linear-gradient(135deg, #ffe1f3, #ffe7ec);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.container {
+    background: white;
+    width: 450px;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border: 1px solid #f3cce5;
+    margin-top: 40px;
+    transition: transform 0.3s ease;
+}
+
+
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #e84d9a;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 12px 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    resize: none;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: #e84d9a;
+    box-shadow: 0 0 5px rgba(232, 77, 154, 0.3);
+
+}
+
+input[type="submit"] {
+    background: linear-gradient(135deg, #f588c5, #e84d9a);
+    border: none;
+    padding: 12px;
+    width: 100%;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+input[type="submit"]:hover {
+    background: linear-gradient(135deg, #e84d9a, #c73c84);
+}
+
+a {
+    display: block;
+    text-align: center;
+    color: #e84d9a;
+    margin-top: 16px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.message {
+    text-align: center;
+    margin-bottom: 12px;
+    color: red;
+    font-size: 14px;
+}
+
+.footer {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 20px;
+    color: #aaa;
+}
+
+/* 留言板样式 */
+.message-board {
+    background: #fff;
+    border-radius: 12px;
+    margin-top: 20px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    resize:none;
+}
+
+.message-board h3 {
+    color: #e84d9a;
+    margin-bottom: 15px;
+    resize:none;
+}
+
+.message-list {
+    list-style: none;
+    resize:none;
+    padding: 0;
+}
+
+.message-list li {
+    background: #f9f9f9;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+    resize:none;
+}
+
+.message-list li:hover {
+    transform: scale(1.02);
+    resize:none;
+}
+
+.message-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    resize:none;
+}
+
+.message-item .content {
+    width: 80%;
+    resize:none;
+}
+
+.message-item .time {
+    color: #aaa;
+    font-size: 12px;
+    resize:none;
+}
+.btn-about {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 20px;
+    background-color: #0d4185;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+.btn-about:hover {
+    background-color: #69f2ff;
+}
+.username {
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 4px;
+}
+.message-item {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.image-gallery img {
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.image-gallery img:hover {
+    transform: scale(1.05);
+}
+/* =====================================*/
+textarea {
+    resize: none !important;
+}
+
+
+
+

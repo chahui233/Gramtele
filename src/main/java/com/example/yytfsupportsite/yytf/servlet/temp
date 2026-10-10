@@ -1,0 +1,107 @@
+<%@ page import="java.sql.*,com.example.yytfsupportsite.yytf.util.DBUtil"%>
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.sql.*, com.yytf.util.DBUtil" %>
+<%
+    String username = (String) session.getAttribute("username");
+    if (username == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>永雏塔菲后援会</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .btn-about {
+            display: inline-block;
+            margin: 20px auto;
+            padding: 8px 20px;
+            background-color: #ff69b4;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn-about:hover {
+            background-color: #ff85c1;
+        }
+        .message-item {
+            background: #fffafc;
+            border: 1px solid #ffcde3;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 0 5px rgba(255, 182, 193, 0.15);
+        }
+        .username {
+            font-weight: bold;
+            color: #e91e63;
+        }
+        .time, .likes {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 style="text-align:center;">🎉 欢迎，<%= username %>！</h2>
+    <p style="text-align:center; color:#888;">你已成功加入永雏塔菲后援会 🧁</p>
+
+    <!-- 跳转按钮 -->
+    <div style="text-align:center;">
+        <a href="about.jsp" class="btn-about">了解永雏塔菲</a>
+    </div>
+
+    <!-- 留言发布表单 -->
+    <form method="post" action="postMessage" style="text-align:center; margin-bottom: 30px;">
+        <textarea name="content" rows="4" style="width:60%;" placeholder="说点什么..."></textarea><br>
+        <input type="submit" value="发布">
+    </form>
+
+    <!-- 留言板展示 -->
+    <div class="message-board">
+        <h3>💬 留言板</h3>
+        <ul class="message-list">
+        <%
+            try (Connection conn = DBUtil.getConnection()) {
+                String query = "SELECT posts.content, posts.created_at, posts.likes, users.username " +
+                               "FROM posts " +
+                               "JOIN users ON posts.user_id = users.id " +
+                               "WHERE posts.status = 'active' " +
+                               "ORDER BY posts.created_at DESC";
+                PreparedStatement ps = conn.prepareStatement(query);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+        %>
+            <li>
+                <div class="message-item">
+                    <div class="username"><%= rs.getString("username") %>：</div>
+                    <div class="content"><%= rs.getString("content") %></div>
+                    <div class="time">🕒 <%= rs.getTimestamp("created_at") %></div>
+                    <div class="likes">👍 <%= rs.getInt("likes") %> 赞</div>
+                </div>
+            </li>
+        <%
+                }
+            } catch (Exception e) {
+                out.println("<li style='color:red;'>留言加载失败：" + e.getMessage() + "</li>");
+            }
+        %>
+        </ul>
+    </div>
+
+    <div class="footer" style="text-align:center; margin-top: 30px;">
+        copyright@魅影网络
+    </div>
+</div>
+</body>
+</html>
+ <div class="footer">
+        CopyRight ©魅影网络 <br>
+        我们立足于中华人民共和国，受当地法律保护！
+    </div>
