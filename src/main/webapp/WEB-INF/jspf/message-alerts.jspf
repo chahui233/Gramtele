@@ -1,0 +1,15 @@
+<%@ page pageEncoding="UTF-8" %>
+<%
+  synchronized (session) {
+    if (session.getAttribute("announcementToken") == null)
+      session.setAttribute("announcementToken", java.util.UUID.randomUUID().toString());
+  }
+%>
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/message-alerts.css?v=20261013-1">
+<div id="messageAlerts" data-context-path="<%= request.getContextPath() %>"
+     data-user-id="<%= session.getAttribute("userId") %>"
+     data-login-token="<%= session.getAttribute("announcementToken") %>">
+  <button type="button" id="messageSound" aria-pressed="false" title="点击页面或此按钮后启用新消息提示音">开启提示音</button>
+  <span id="messageSoundStatus" role="status"></span>
+</div>
+<script src="<%= request.getContextPath() %>/js/message-alerts.js?v=20261013-1" defer></script>

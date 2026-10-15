@@ -1,47 +1,27 @@
 package com.example.yytfsupportsite.yytf.servlet;
 
-import com.example.yytfsupportsite.yytf.util.DBUtil;
+import com.example.yytfsupportsite.yytf.util.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.*;
 
 @WebServlet("/DeleteFriendServlet")
 public class DeleteFriendServlet extends HttpServlet {
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
-        HttpSession session = request.getSession(false);
-        Integer userId = (Integer) session.getAttribute("userId");
-
-        String fidStr = request.getParameter("friendId");
-        if (userId == null || fidStr == null) {
-            response.getWriter().write("无效请求");
-            return;
-        }
-
-        try {
-            int fid = Integer.parseInt(fidStr);
-            Connection conn = DBUtil.getConnection();
-
-            PreparedStatement ps = conn.prepareStatement(
-                    "DELETE FROM friends WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)"
-            );
-            ps.setInt(1, userId);
-            ps.setInt(2, fid);
-            ps.setInt(3, fid);
-            ps.setInt(4, userId);
-
-            int rows = ps.executeUpdate();
-            ps.close();
-            conn.close();
-
-            response.getWriter().write(rows > 0 ? "好友已删除" : "删除失败");
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.getWriter().write("服务器错误");
+    @Override protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        Integer userId = SocialAuth.user(req, resp, true);
+        if (userId == null) return;
+        int friendId;
+        try { friendId = Integer.parseInt(req.getParameter("friendId")); }
+        catch (NumberFormatException e) { resp.sendError(400); return; }
+        if (friendId <= 0 || friendId == userId) { resp.sendError(400); return; }
+        try (Connection c = DBUtil.getConnection()) {
+            String result = FriendRequests.delete(c, userId, friendId) ? "好友已删除" : "你们已不是好友";
+            resp.setContentType("text/plain;charset=UTF-8");
+            resp.getWriter().write(result);
+        } catch (SQLException e) {
+            getServletContext().log("Friend operation failed; check friend-requests.sql migration", e);
+            resp.sendError(503);
         }
     }
 }

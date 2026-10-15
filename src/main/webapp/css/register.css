@@ -1,0 +1,26 @@
+.registration { width: min(920px, calc(100% - 32px)); margin: 24px auto; padding: 32px; }
+.registration form { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(300px, 1.25fr); gap: 28px; align-items: start; }
+.registration label { display: block; margin-top: 12px; color: #443944; font-weight: 600; }
+.password-help { margin: 0 0 16px; color: #625b62; font-size: 13px; line-height: 1.6; }
+.password-requirements { border: 1px solid #eadde5; border-radius: 12px; background: #fffafd; padding: 18px; }
+.password-requirements h3 { margin-bottom: 8px; font-size: 16px; color: #443944; }
+.password-requirements ol { list-style: none; margin: 0; padding: 0; }
+.password-requirements li { display: flex; align-items: baseline; gap: 8px; margin-top: 9px; font-size: 14px; line-height: 1.5; color: #a42e45; }
+.password-requirements li[data-valid="true"] { color: #187345; }
+.rule-symbol { flex: 0 0 16px; font-weight: bold; font-size: 17px; text-align: center; }
+.rule-note { margin-top: 14px; font-size: 12px; line-height: 1.7; color: #625b62; }
+.registration .msg { color: #a42e45; margin-bottom: 14px; }
+.registration input[type="submit"]:disabled { opacity: .55; cursor: not-allowed; }
+.registration .submit-status { font-size: 13px; line-height: 1.5; margin: 12px 0; color: #625b62; }
+.registration-difficulty { padding:12px; margin-bottom:16px; border:1px solid #efc9aa; border-radius:8px; background:#fff6ed; color:#75401f; font-size:14px; line-height:1.7; }
+.challenge-details { padding:12px; border-radius:8px; background:#f6f3f7; color:#514953; font-size:12px; line-height:1.7; }
+.challenge-details p + p { margin-top:8px; }
+.challenge-details code, .password-requirements code { overflow-wrap:anywhere; word-break:break-all; }
+.challenge-details code { display:block; color:#41334a; }
+.registration-fields, .password-requirements, .password-requirements li > span:last-child { min-width:0; }
+.registration [hidden] { display:none !important; }
+@media (max-width: 680px) {
+  .registration { padding: 22px; }
+  .registration form { display: flex; flex-direction: column; gap: 20px; }
+  .registration .registration-fields, .password-requirements { width: 100%; }
+}

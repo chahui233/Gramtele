@@ -29,6 +29,11 @@ public class UpdateProfileServlet extends HttpServlet {
         }
 
         String displayName = request.getParameter("displayName");
+        String signature = request.getParameter("signature");
+        if (signature == null) signature = "";
+        if (displayName == null || displayName.isBlank() || displayName.length() > 50 || signature.length() > 200) {
+            response.sendError(400, "昵称须为1至50字，个性签名最多200字"); return;
+        }
         Part part = request.getPart("avatar");
         String avatarUrl = null;
 
@@ -56,15 +61,17 @@ public class UpdateProfileServlet extends HttpServlet {
             avatarUrl = "/avatar/" + newFileName;
         }
 
-        try (Connection conn = DBUtil.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement(avatarUrl == null
-                    ? "UPDATE users SET display_name=? WHERE id=?"
-                    : "UPDATE users SET display_name=?, avatar=? WHERE id=?");
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(avatarUrl == null
+                    ? "UPDATE users SET display_name=?, signature=? WHERE id=?"
+                    : "UPDATE users SET display_name=?, signature=?, avatar=? WHERE id=?")) {
             ps.setString(1, displayName);
-            if (avatarUrl == null) ps.setInt(2, userId);
-            else { ps.setString(2, avatarUrl); ps.setInt(3, userId); }
+            ps.setString(2, signature);
+            if (avatarUrl == null) ps.setInt(3, userId);
+            else { ps.setString(3, avatarUrl); ps.setInt(4, userId); }
             ps.executeUpdate();
             session.setAttribute("displayName", displayName);
+            session.setAttribute("signature", signature);
             if (avatarUrl != null) session.setAttribute("avatar", avatarUrl);
         } catch (Exception e) {
             getServletContext().log("Profile update failed", e);

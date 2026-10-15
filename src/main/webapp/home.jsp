@@ -30,46 +30,29 @@
         response.sendRedirect("login.jsp");  // 如果 userId 为 null，重定向到登录页面
         return;
     }
+    List<Map<String, String>> posts = (List<Map<String, String>>) request.getAttribute("posts");
+    if (posts == null) {
+        response.sendRedirect("GetPostsServlet?page=1");
+        return;
+    }
+    int currentPage = request.getAttribute("currentPage") != null ? (int) request.getAttribute("currentPage") : 1;
+    int totalPages = request.getAttribute("totalPages") != null ? (int) request.getAttribute("totalPages") : 1;
+    if (session.getAttribute("announcementToken") == null) {
+        session.setAttribute("announcementToken", java.util.UUID.randomUUID().toString());
+    }
 %>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GramTele</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20261013-board-1">
+    <link rel="stylesheet" href="css/dialog.css">
+    <link rel="stylesheet" href="css/holiday-countdown.css?v=20261013-1">
+    <script src="js/holiday-countdown.js?v=20261013-1" defer></script>
+    <script src="js/message-board.js?v=20261013-1" defer></script>
 </head>
-<script>
-    function pad(n) {
-        return n < 10 ? '0' + n : n;
-    }
 
-    function updateCountdown() {
-        const now = new Date();
-        const year = (now.getMonth() > 7 || (now.getMonth() === 7 && now.getDate() >= 12))
-            ? now.getFullYear() + 1 : now.getFullYear();
-        const target = new Date(year + "-08-12T00:00:00");
-        const diff = target - now;
-
-        if (diff <= 0) {
-            document.getElementById("countdown").innerHTML = "🎉 生日快乐，塔菲喵！";
-            return;
-        }
-
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-
-        let html = "距离聊天记录清空还有 <strong>" + pad(days) + "</strong> 天 ";
-        html += "<strong>" + pad(hours) + "</strong> 小时 ";
-        html += "<strong>" + pad(minutes) + "</strong> 分 ";
-        html += "<strong>" + pad(seconds) + "</strong> 秒！";
-
-        document.getElementById("countdown").innerHTML = html;
-    }
-
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
-</script>
 
 <script>
     let eggBuffer = "";
@@ -107,7 +90,7 @@
                 box-shadow: 0 0 20px rgba(244,2,2,0.5);
                 animation: fadeIn 0.5s ease;
             ">
-                哇！<br>我们ADC这波真的很霸气耶
+                漂亮！<br>这波我们ADC真的很霸气耶
             </div>
         `;
         document.body.appendChild(egg);
@@ -125,7 +108,7 @@
 </style>
 
 
-<body>
+<body class="home-page">
 
 <div id="adminConsole" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #999; border-radius:10px; padding:20px; z-index:9999; box-shadow:0 0 15px rgba(0,0,0,0.3);">
     <h3 style="margin-bottom:10px; text-align:center;">管理员控制台</h3>
@@ -139,7 +122,8 @@
         </button>
     </form>
 </div>
-<div style="position: absolute; top: 20px; right: 30px;">
+<div class="home-account-actions">
+    <%@ include file="WEB-INF/jspf/message-alerts.jspf" %>
     <form action="profile.jsp" method="get">
         <style>
             .action-button {
@@ -162,10 +146,11 @@
         <div style="text-align:center;">
             <!-- 个人中心 -->
             <input type="submit" value="个人中心" class="action-button">
+            <button type="button" id="announcementButton" class="action-button">公告</button>
 
 
             <!-- 显示图片 -->
-            <input type="button" value="打赏" class="action-button" onclick="showImagePopup()">
+            <input type="button" value="关于作者" class="action-button" onclick="showImagePopup()">
 
             <!-- 跳转链接 -->
             <input type="button" value="去异世界" class="action-button" onclick="goToWebsite()">
@@ -177,8 +162,15 @@
     <div class="container">
     <h2>🎉 欢迎，<%= escapeHtml(username) %>！</h2>
     <p style="text-align:center; color:#888;">你已成功登入Gramtele 🧁</p>
-    <div id="countdown" style="text-align: center; font-size: 18px; margin: 20px auto; padding: 10px; background-color: #fff8f8; border-radius: 8px; border: 1px solid #ffd6e0;">
-        正在加载倒计时...
+    <div id="countdown" data-calendar="js/holidays.json?v=20261013-1">
+        <span id="holidayLabel">正在加载节假日倒计时…</span>
+        <div class="holiday-time" hidden>
+            <span><strong data-countdown-unit="days">00</strong> 天</span>
+            <span><strong data-countdown-unit="hours">00</strong> 小时</span>
+            <span><strong data-countdown-unit="minutes">00</strong> 分</span>
+            <span><strong data-countdown-unit="seconds">00</strong> 秒</span>
+        </div>
+        <button type="button" id="holidayRetry" hidden>重新加载</button>
     </div>
 
     <!--
@@ -193,23 +185,14 @@
 
     <!-- 留言发布表单 -->
 
-    <form method="post" action="postMessage">
-        <textarea name="content" rows="4" placeholder="说点什么..."></textarea>
+    <form id="postForm" method="post" action="postMessage">
+        <textarea id="postContent" name="content" rows="4" placeholder="说点什么..." aria-label="留言内容" aria-describedby="postContentError" required></textarea>
+        <p id="postContentError" class="post-content-error" role="alert" hidden></p>
         <input type="submit" value="发布">
     </form>
 
 
     <!-- 留言展示区域 -->
-    <%
-        List<Map<String, String>> posts = (List<Map<String, String>>) request.getAttribute("posts");
-        int currentPage = request.getAttribute("currentPage") != null ? (int) request.getAttribute("currentPage") : 1;
-        int totalPages = request.getAttribute("totalPages") != null ? (int) request.getAttribute("totalPages") : 1;
-
-        if (posts == null) {
-            response.sendRedirect("GetPostsServlet?page=1");
-            return;
-        }
-    %>
     <div class="message-board">
         <h3>💬 留言板</h3>
         <ul class="message-list">
@@ -219,11 +202,22 @@
                     String posterName = post.get("username");
                     String content = post.get("content");
                     String time = post.get("createdAt");
+                    String posterAvatar = post.get("avatar");
+                    if (posterAvatar == null || posterAvatar.isBlank()) posterAvatar = request.getContextPath() + "/images/taffy1.jpg";
             %>
             <li class="message-item">
-                <div class="username" onclick="showUserOptions(<%= posterId %>, event)"><%= escapeHtml(posterName) %></div>
+                <div class="post-author">
+                    <% if (!String.valueOf(userId).equals(posterId)) { %>
+                    <button type="button" class="profile-avatar-button" data-profile-id="<%= escapeHtml(posterId) %>" aria-label="查看 <%= escapeHtml(posterName) %> 的资料">
+                        <img src="<%= escapeHtml(posterAvatar) %>" alt="" data-avatar>
+                    </button>
+                    <% } else { %>
+                    <img class="post-avatar" src="<%= escapeHtml(posterAvatar) %>" alt="我的头像" data-avatar>
+                    <% } %>
+                    <div class="username" onclick="showUserOptions(<%= posterId %>, event)"><%= escapeHtml(posterName) %></div>
+                </div>
                 <div class="message-content"><%= escapeHtml(content) %></div>
-                <div class="message-time"><%= time %></div>
+                <time class="message-time"><%= escapeHtml(time) %></time>
             </li>
             <%
                 }
@@ -287,15 +281,24 @@
                 fetch('AddFriendServlet', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': document.getElementById('announcementDialog').dataset.loginToken
                     },
                     body: 'friendId=' + encodeURIComponent(friendId)
                 })
-                    .then(response => response.text())
+                    .then(response => {
+                        if (!response.ok) throw new Error('请求失败');
+                        return response.text();
+                    })
                     .then(text => {
                         text = text.trim();
                         if (text === 'success') {
-                            alert("✅ 添加好友成功！");
+                            alert("✅ 好友申请已发送，等待对方同意。");
+                        } else if (text === 'pending') {
+                            alert("已经发送过申请，请等待对方同意。");
+                        } else if (text === 'incoming') {
+                            alert("对方已向你发送申请，请到通知页面处理。");
+                            location.href = 'notifications.jsp';
                         } else if (text === 'already') {
                             alert("⚠️ 你们已经是好友了！");
                         } else {
@@ -349,14 +352,10 @@
 
 <script>
     function showImagePopup() {
-        document.getElementById("imagePopup").style.display = "block";
-    }
-    function closeImagePopup() {
-        document.getElementById("imagePopup").style.display = "none";
+        window.location.href = "about.jsp";
     }
     function goToWebsite() {
         window.location.href = "https://vdse.bdstatic.com/192d9a98d782d9c74c96f09db9378d93.mp4";
-
     }
 </script>
 
@@ -414,5 +413,29 @@
     });
 </script>
 
+<dialog id="announcementDialog" class="site-dialog" aria-labelledby="announcementHeading"
+        data-context-path="<%= escapeHtml(request.getContextPath()) %>"
+        data-login-token="<%= escapeHtml((String) session.getAttribute("announcementToken")) %>">
+    <div class="dialog-header">
+        <h2 id="announcementHeading">网站公告</h2>
+        <button type="button" id="announcementClose">关闭</button>
+    </div>
+    <p id="announcementStatus" role="status"></p>
+    <button type="button" id="announcementRefresh">重新加载</button>
+    <div id="announcementList"></div>
+    <% if ("admin".equals(username)) { %>
+    <form id="announcementForm">
+        <h3>发布公告</h3>
+        <label for="announcementTitle">标题</label>
+        <input id="announcementTitle" name="title" maxlength="120" required>
+        <label for="announcementContent">正文</label>
+        <textarea id="announcementContent" name="content" rows="5" maxlength="10000" required></textarea>
+        <button type="submit" id="announcementPublish">发布公告</button>
+        <p id="announcementPublishStatus" role="status"></p>
+    </form>
+    <% } %>
+</dialog>
+<script src="js/announcements.js" defer></script>
+<%@ include file="WEB-INF/jspf/user-card.jspf" %>
 </body>
 </html>

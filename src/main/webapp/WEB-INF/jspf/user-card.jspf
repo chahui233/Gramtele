@@ -1,0 +1,21 @@
+<%@ page pageEncoding="UTF-8" %>
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/dialog.css">
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/user-card.css?v=20261013-1">
+<dialog id="friendDialog" class="site-dialog user-card" aria-labelledby="friendHeading"
+        data-context-path="<%= escapeHtml(request.getContextPath()) %>"
+        data-login-token="<%= escapeHtml((String) session.getAttribute("announcementToken")) %>">
+  <div class="dialog-header"><h2 id="friendHeading">个人资料</h2><button type="button" id="friendClose">关闭</button></div>
+  <div class="user-card-summary">
+    <img id="friendAvatar" class="user-card-avatar" src="<%= request.getContextPath() %>/images/taffy1.jpg" alt="头像" data-avatar>
+    <h3 id="friendName"></h3>
+  </div>
+  <p id="friendSignature" class="user-card-signature"></p>
+  <p id="friendStatus" role="status"></p>
+  <div class="user-card-actions">
+    <button type="button" id="profileRetry" hidden>重新加载</button>
+    <button type="button" id="sendFriendRequest" disabled>发送好友申请</button>
+    <a href="notifications.jsp" id="viewFriendRequest" hidden>前往通知处理申请</a>
+    <a id="friendChat" hidden>发送私聊消息</a>
+  </div>
+</dialog>
+<script src="<%= request.getContextPath() %>/js/user-card.js?v=20261013-1" defer></script>

@@ -37,7 +37,9 @@
 <html>
 
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>聊天室</title>
+  <link rel="stylesheet" href="css/dialog.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -69,6 +71,9 @@
     }
     .chat-area {
       flex: 1;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
       display: flex;
       flex-direction: column;
       background-color: rgba(255,255,255,0.9);
@@ -82,8 +87,11 @@
     }
     .chat-messages {
       flex: 1;
+      min-height: 0;
       padding: 20px;
       overflow-y: auto;
+      overflow-anchor: none;
+      scroll-behavior: auto;
     }
     .message {
       margin-bottom: 15px;
@@ -117,6 +125,7 @@
       padding: 15px 20px;
       border-top: 1px solid #ccc;
       background-color: #f9f9f9;
+      flex-shrink: 0;
     }
     .chat-form input[type="text"] {
       flex: 1;
@@ -137,11 +146,22 @@
       cursor: pointer;
     }
     .message img.chat-img {
-      max-width: 200px;
+      display: block;
+      width: 200px;
+      height: 200px;
+      max-width: 100%;
+      object-fit: contain;
+      background: #f2f5f7;
       border-radius: 8px;
       margin-top: 8px;
     }
+    .history-control { display: block; margin: 0 auto 16px; padding: 6px 12px; }
+    #historyStatus, #sendStatus { position: absolute; left: 20px; right: 20px; z-index: 2; background: #fff3df; color: #7a4200; padding: 8px; font-size: 13px; }
+    #historyStatus { top: 58px; }
+    #sendStatus { bottom: 72px; }
+    [hidden] { display: none !important; }
   </style>
+  <link rel="stylesheet" href="css/social.css?v=20261013-profile-1">
 
 </head>
 <body>
@@ -202,39 +222,17 @@
 
 <div class="container">
   <!-- 左侧好友栏 -->
-  <div class="sidebar">
-    <div class="group" onclick="location.href='chat.jsp?chatWith=-1'">👥 群组：共产国际</div>
-    <hr>
-    <h4>好友列表</h4>
-    <%
-      Connection conn = DBUtil.getConnection();
-      PreparedStatement ps = conn.prepareStatement(
-              "SELECT u.id, COALESCE(u.display_name, u.username) AS show_name " +
-                      "FROM users u " +
-                      "WHERE u.id IN (SELECT friend_id FROM friends WHERE user_id = ? " +
-                      "UNION SELECT user_id FROM friends WHERE friend_id = ?)"
-      );
-      ps.setInt(1, userId);
-      ps.setInt(2, userId);
-      ResultSet frs = ps.executeQuery();
-      while (frs.next()) {
-        int fid = frs.getInt("id");
-        String fname = frs.getString("show_name");
-    %>
-    <div class="friend" onclick="location.href='chat.jsp?chatWith=<%=fid%>'">💬 <%= escapeHtml(fname) %></div>
-    <%
-      }
-      frs.close();
-      ps.close();
-    %>
-  </div>
+  <%@ include file="WEB-INF/jspf/chat-sidebar.jspf" %>
   <!-- 聊天区域 -->
   <div class="chat-area">
     <div class="chat-header">
+      <div class="chat-heading">
+      <h1 class="chat-title">
       <%
         if (chatWithId == -1) {
           out.print("群聊：共产国际");
         } else {
+          try (Connection conn = DBUtil.getConnection()) {
           PreparedStatement p = conn.prepareStatement(
                   "SELECT COALESCE(display_name, username) AS show_name FROM users WHERE id=?"
           );
@@ -242,39 +240,87 @@
           ResultSet r = p.executeQuery();
           if (r.next()) out.print("私聊：" + escapeHtml(r.getString("show_name")));
           r.close(); p.close();
+          }
 
         }
       %>
+      </h1>
+      <a class="chat-home-button" href="home.jsp">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg>
+        <span>返回主页</span>
+      </a>
+      </div>
+      <div class="chat-toolbar">
       <%
         if (chatWithId != -1) {
       %>
-      <button onclick="deleteFriend(<%= chatWithId %>)"
-              style="margin-left: 20px; padding: 5px 10px; background-color: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
+      <button type="button" class="delete-friend-button" onclick="deleteFriend(<%= chatWithId %>)">
         删除好友
       </button>
       <%
         }
       %>
-      <span id="connectionStatus" role="status" style="font-size:12px; color:#666; margin-left:12px;"></span>
+      <span id="connectionStatus" role="status"></span>
+      <% if (chatWithId == -1) { %>
+      <button type="button" id="onlineButton">在线人数：加载中</button>
+      <% } %>
+      <%@ include file="WEB-INF/jspf/message-alerts.jspf" %>
+      </div>
     </div>
-    <% conn.close(); %>
+
+    <p id="historyStatus" role="alert" hidden></p>
     <div class="chat-messages" id="chatBox" data-user-id="<%= userId %>" data-chat-with="<%= chatWithId %>" data-context-path="<%= escapeHtml(request.getContextPath()) %>">
-      <!-- 留空，WebSocket 会动态添加 -->
+      <button type="button" id="loadOlder" class="history-control" hidden>加载更早记录</button>
+      <div id="messageList"></div>
     </div>
     <!-- 消息输入区域 -->
 
-    <form class="chat-form" method="post" action="ChatServlet" enctype="multipart/form-data">
-      <input type="text" name="content" placeholder="输入消息..." id="chatInput">
+    <p id="sendStatus" role="alert" hidden></p>
+    <form id="chatForm" class="chat-form" method="post" action="ChatServlet" enctype="multipart/form-data">
+      <input type="text" name="content" placeholder="输入消息..." id="chatInput" maxlength="4000">
       <input type="hidden" name="chatWithId" value="<%= chatWithId %>">
-      <input type="file" name="image">
-      <input type="submit" value="发送">
+      <input type="file" name="image" id="chatImage" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+      <button type="button" id="attachImage" class="composer-icon-button" aria-label="选择图片" title="选择图片">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m4 18 5-5 3 3 4-6 5 8"/></svg>
+      </button>
+      <div class="emoji-control">
+        <button type="button" id="emojiButton" aria-label="插入表情" aria-controls="emojiPicker" aria-expanded="false" data-catalogue="js/emoji-data.json?v=18.0-1">😀</button>
+        <div id="emojiPicker" role="group" aria-label="选择表情" hidden>
+          <div class="emoji-heading"><strong>选择表情</strong><span id="emojiCount" role="status"></span></div>
+          <div class="emoji-filters">
+            <input type="search" id="emojiSearch" aria-label="搜索表情" placeholder="搜索中文 / English / emoji" autocomplete="off" disabled>
+            <select id="emojiCategory" aria-label="表情分类" disabled><option value="">全部分类</option></select>
+          </div>
+          <div class="emoji-grid" id="emojiGrid" role="group" aria-label="表情列表"></div>
+          <div class="emoji-pagination">
+            <button type="button" id="emojiPrev" aria-controls="emojiGrid">上一页</button>
+            <span id="emojiPage" role="status"></span>
+            <button type="button" id="emojiNext" aria-controls="emojiGrid">下一页</button>
+          </div>
+          <p id="emojiStatus" role="status" hidden></p>
+          <button type="button" id="emojiRetry" hidden>重新加载</button>
+        </div>
+      </div>
+      <input type="submit" value="发送" id="sendButton" disabled>
+      <div id="chatAttachment" class="chat-attachment" hidden>
+        <span id="chatAttachmentName"></span><button type="button" id="clearChatImage" aria-label="移除已选图片">移除</button>
+      </div>
     </form>
   </div>
 </div>
 
-<div style="position: absolute; top: 10px; right: 10px;">
-  <button onclick="location.href='home.jsp'">🏠 返回主页</button>
-</div>
-<script src="js/chat.js" defer></script>
+<%@ include file="WEB-INF/jspf/user-card.jspf" %>
+<script src="js/social.js?v=20261013-profile-1" defer></script>
+<script src="js/chat.js?v=20261013-profile-1" defer></script>
+<script src="js/chat-attachment.js?v=20261013-1" defer></script>
+<script src="js/emoji-support.js?v=20261013-1" defer></script>
+<script src="js/emoji.js?v=20261013-1" defer></script>
+<dialog id="onlineDialog" class="site-dialog" aria-labelledby="onlineHeading">
+  <div class="dialog-header"><h2 id="onlineHeading">当前在线用户</h2><button type="button" id="onlineClose">关闭</button></div>
+  <p>正在使用聊天室的用户</p>
+  <p id="onlineStatus" role="status"></p>
+  <ul id="onlineList"></ul>
+</dialog>
+<script src="js/presence.js" defer></script>
 </body>
 </html>

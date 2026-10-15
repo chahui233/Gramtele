@@ -32,7 +32,7 @@ public class GetPostsServlet extends HttpServlet {
             }
 
             int offset = (page - 1) * pageSize;
-            String sql = "SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
+            String sql = "SELECT p.*, COALESCE(NULLIF(u.display_name,''),u.username) AS show_name, u.avatar FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, pageSize);
             ps.setInt(2, offset);
@@ -41,7 +41,8 @@ public class GetPostsServlet extends HttpServlet {
             while (rs.next()) {
                 Map<String, String> post = new HashMap<>();
                 post.put("userId", rs.getString("user_id"));
-                post.put("username", rs.getString("username"));
+                post.put("username", rs.getString("show_name"));
+                post.put("avatar", rs.getString("avatar"));
                 post.put("content", rs.getString("content"));
                 post.put("createdAt", rs.getString("created_at"));
                 posts.add(post);

@@ -1,0 +1,48 @@
+<%@ page pageEncoding="UTF-8" %>
+<%
+  synchronized (session) {
+    if (session.getAttribute("announcementToken") == null)
+      session.setAttribute("announcementToken", java.util.UUID.randomUUID().toString());
+  }
+%>
+<nav class="sidebar" id="chatSidebar" aria-label="聊天导航"
+     data-context-path="<%= escapeHtml(request.getContextPath()) %>"
+     data-login-token="<%= escapeHtml((String) session.getAttribute("announcementToken")) %>">
+  <a class="group conversation-link" href="chat.jsp?chatWith=-1" data-conversation="-1">
+    <span>👥 群组：共产国际</span><span class="unread-badge" data-unread="-1" hidden></span>
+  </a>
+  <a class="notification-link conversation-link" href="notifications.jsp">
+    <span>🔔 通知</span><span class="unread-badge" id="notificationBadge" hidden></span>
+  </a>
+  <hr>
+  <h4>好友列表</h4>
+  <div id="friendList">
+  <%
+    try (Connection sidebarConn = DBUtil.getConnection();
+         PreparedStatement sidebarPs = sidebarConn.prepareStatement(
+           "SELECT u.id, COALESCE(NULLIF(u.display_name,''),u.username) AS show_name,u.avatar FROM users u " +
+           "WHERE u.id<>? AND u.id IN (SELECT friend_id FROM friends WHERE user_id=? " +
+           "UNION SELECT user_id FROM friends WHERE friend_id=?) ORDER BY u.id")) {
+      sidebarPs.setInt(1, userId); sidebarPs.setInt(2, userId); sidebarPs.setInt(3, userId);
+      try (ResultSet sidebarRs = sidebarPs.executeQuery()) {
+        while (sidebarRs.next()) {
+          int friendListId = sidebarRs.getInt("id");
+          String friendAvatar = sidebarRs.getString("avatar");
+          if (friendAvatar == null || friendAvatar.isBlank()) friendAvatar = request.getContextPath() + "/images/taffy1.jpg";
+  %>
+    <div class="friend-row">
+    <button type="button" class="profile-avatar-button" data-profile-id="<%= friendListId %>" aria-label="查看 <%= escapeHtml(sidebarRs.getString("show_name")) %> 的资料">
+      <img src="<%= escapeHtml(friendAvatar) %>" alt="" data-avatar>
+    </button>
+    <a class="friend conversation-link" href="chat.jsp?chatWith=<%= friendListId %>" data-conversation="<%= friendListId %>">
+      <span><%= escapeHtml(sidebarRs.getString("show_name")) %></span>
+      <span class="unread-badge" data-unread="<%= friendListId %>" hidden></span>
+    </a>
+    </div>
+  <%    }
+      }
+    }
+  %>
+  </div>
+  <p id="sidebarStatus" class="muted" role="status"></p>
+</nav>

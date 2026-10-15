@@ -46,8 +46,10 @@
 <div class="about-container">
     <h2>💖 简介</h2>
     <p>
-        Gramtele 是一个面向全球的完全自由的聊天软件，可以加入群组，发起私聊，添加好友等，<br>。
+        Gramtele 是一个面向全球的完全自由的聊天软件，可以加入群组，发起私聊，添加好友等。<br>
     </p>
+    <p>
+    <img src="images/IMG_4120.JPG" alt="示例图片" style="max-width:100%; max-height:80vh;"></p>
     <a class="btn-link" href="https://space.bilibili.com/304510678" target="_blank">B站主页</a>
 </div>
 

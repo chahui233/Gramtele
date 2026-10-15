@@ -1,0 +1,6 @@
+#messageAlerts { display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px; vertical-align:middle; max-width:100%; }
+#messageAlerts #messageSound { font:12px/18px Arial,sans-serif; padding:4px 10px; border:1px solid #b9d7e7; border-radius:14px; background:#eaf6fc; color:#176184; cursor:pointer; }
+#messageAlerts #messageSound:hover { background:#d4f1ff; }
+#messageAlerts #messageSound:focus-visible { outline:2px solid #0088cc; outline-offset:2px; }
+#messageSoundStatus { font:12px/18px Arial,sans-serif; color:#8a3200; }
+#messageSoundStatus:empty { display:none; }

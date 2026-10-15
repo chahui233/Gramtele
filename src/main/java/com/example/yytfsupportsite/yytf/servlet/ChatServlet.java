@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import com.example.yytfsupportsite.yytf.websocket.ChatWebSocket;
+import com.google.gson.Gson;
 
 import java.io.*;
 import java.sql.*;
@@ -22,11 +23,12 @@ public class ChatServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        HttpSession session = request.getSession();
+        boolean jsonResponse = "application/json".equals(request.getHeader("Accept"));
+        HttpSession session = request.getSession(false);
 
-        Integer userId = (Integer) session.getAttribute("userId");
+        Integer userId = session == null ? null : (Integer) session.getAttribute("userId");
         if (userId == null) {
-            response.sendRedirect("login.jsp");
+            response.sendError(401);
             return;
         }
 
@@ -40,11 +42,7 @@ public class ChatServlet extends HttpServlet {
         boolean hasImage = imagePart != null && imagePart.getSize() > 0;
 
         if (!hasText && !hasImage) {
-            if (chatWithIdParam != null && !chatWithIdParam.equals("-1")) {
-                response.sendRedirect("chat.jsp?chatWith=" + chatWithIdParam);
-            } else {
-                response.sendRedirect("chat.jsp");
-            }
+            response.sendError(400, "请输入消息或选择图片");
             return;
         }
 
@@ -52,8 +50,9 @@ public class ChatServlet extends HttpServlet {
         if (chatWithIdParam != null && !chatWithIdParam.isEmpty()) {
             try {
                 chatWithId = Integer.parseInt(chatWithIdParam);
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException invalid) { response.sendError(400); return; }
         }
+        if (chatWithId != -1 && chatWithId <= 0) { response.sendError(400); return; }
 
         if (chatWithId != -1) {
             try {
@@ -96,6 +95,7 @@ public class ChatServlet extends HttpServlet {
         }
 
 
+        java.util.Map<String, Object> savedMessage;
         // 存入数据库
         try (Connection conn = DBUtil.getConnection()) {
             PreparedStatement ps;
@@ -137,7 +137,7 @@ public class ChatServlet extends HttpServlet {
             String now = new java.sql.Timestamp(System.currentTimeMillis()).toString();
 
 // 推送消息
-            ChatWebSocket.pushMessage(
+            savedMessage = ChatWebSocket.pushMessage(
                     messageId,
                     userId,
                     chatWithId == -1 ? null : chatWithId,
@@ -154,7 +154,14 @@ public class ChatServlet extends HttpServlet {
             return;
         }
 
-        // 重定向回聊天页面
+        if (jsonResponse) {
+            response.setStatus(201);
+            response.setHeader("Cache-Control", "no-store");
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(new Gson().toJson(savedMessage));
+            return;
+        }
+        // Retain the redirect only for legacy non-AJAX clients.
         if (chatWithId == -1) {
             response.sendRedirect("chat.jsp");
         } else {

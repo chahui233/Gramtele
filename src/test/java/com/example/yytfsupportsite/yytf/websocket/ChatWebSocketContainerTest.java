@@ -56,12 +56,12 @@ class ChatWebSocketContainerTest {
             firstInbox.messages.clear();
             secondInbox.messages.clear();
             ChatWebSocket.sendPrivateMessage(9, 7, "live");
-            assertEquals("live", firstInbox.messages.poll(5, TimeUnit.SECONDS));
-            assertEquals("live", secondInbox.messages.poll(5, TimeUnit.SECONDS));
+            assertEquals("live", firstInbox.nextApplicationMessage());
+            assertEquals("live", secondInbox.nextApplicationMessage());
             first.sendClose(java.net.http.WebSocket.NORMAL_CLOSURE, "leaving").get(5, TimeUnit.SECONDS);
             assertTrue(firstInbox.closed.await(5, TimeUnit.SECONDS));
             ChatWebSocket.sendPrivateMessage(9, 7, "after-close");
-            assertEquals("after-close", secondInbox.messages.poll(5, TimeUnit.SECONDS));
+            assertEquals("after-close", secondInbox.nextApplicationMessage());
 
             Inbox anonymous = new Inbox();
             var unauthenticated = http.newWebSocketBuilder()
@@ -82,6 +82,14 @@ class ChatWebSocketContainerTest {
         final CountDownLatch closed = new CountDownLatch(1);
         int closeCode;
         private final StringBuilder text = new StringBuilder();
+        String nextApplicationMessage() throws InterruptedException {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            String message;
+            do {
+                message = messages.poll(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
+            } while ("ready".equals(message) && System.nanoTime() < deadline);
+            return message;
+        }
         @Override public void onOpen(java.net.http.WebSocket socket) { socket.request(1); }
         @Override public CompletionStage<?> onText(java.net.http.WebSocket socket, CharSequence data, boolean last) {
             text.append(data);

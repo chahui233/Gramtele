@@ -27,14 +27,22 @@ public class LoginServlet extends HttpServlet {
                         update.setString(1, Passwords.hash(password)); update.setInt(2, id); update.executeUpdate();
                     }
                 }
+                UnreadMessages unread = UnreadMessages.start(conn);
+                // Tomcat resolves the client address. Forwarded headers require a trusted
+                // reverse-proxy configuration; never accept arbitrary request headers here.
+                try (PreparedStatement update = conn.prepareStatement("UPDATE users SET ipaddress=? WHERE id=?")) {
+                    update.setString(1, req.getRemoteAddr()); update.setInt(2, id); update.executeUpdate();
+                }
                 HttpSession old = req.getSession(false);
                 if (old != null) old.invalidate();
                 HttpSession session = req.getSession(true);
                 session.setAttribute("userId", id);
+                session.setAttribute(UnreadMessages.SESSION_KEY, unread);
                 session.setAttribute("username", rs.getString("username"));
                 session.setAttribute("displayName", rs.getString("display_name"));
                 session.setAttribute("avatar", rs.getString("avatar"));
                 session.setAttribute("isAdmin", rs.getBoolean("is_admin"));
+                session.setAttribute("announcementToken", java.util.UUID.randomUUID().toString());
                 resp.sendRedirect(req.getContextPath() + "/home.jsp");
             }
         } catch (SQLException e) {

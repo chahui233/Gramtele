@@ -1,0 +1,14 @@
+.profile-avatar-button { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border:0; border-radius:50%; background:#eaf3f9; cursor:pointer; }
+.profile-avatar-button:hover, .profile-avatar-button:focus-visible { outline:2px solid #0088cc; outline-offset:2px; }
+.profile-avatar-button img, .post-avatar { display:block; width:36px; height:36px; flex-shrink:0; border-radius:50%; object-fit:cover; }
+.post-author { display:flex; align-items:center; gap:10px; min-width:0; }
+.post-author .username { margin:0; min-width:0; overflow-wrap:anywhere; }
+.user-card { box-sizing:border-box; width:min(420px,92vw); padding:24px; }
+.user-card .dialog-header h2 { margin:0; font-size:20px; color:#243746; letter-spacing:normal; }
+.user-card-summary { display:flex; align-items:center; gap:16px; min-width:0; }
+.user-card-avatar { width:72px; height:72px; object-fit:cover; border-radius:50%; flex-shrink:0; }
+#friendName { min-width:0; font-size:20px; overflow-wrap:anywhere; }
+.user-card .user-card-signature { margin:18px 0; white-space:pre-wrap; overflow-wrap:anywhere; color:#596975; line-height:1.6; }
+.user-card-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.user-card-actions a { display:inline-block; margin:0; color:#087ba9; font-size:14px; }
+.user-card [hidden] { display:none !important; }

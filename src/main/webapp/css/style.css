@@ -140,31 +140,54 @@ a:hover {
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease;
+    transition: box-shadow 0.2s ease;
     resize:none;
 }
 
 .message-list li:hover {
-    transform: scale(1.02);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
     resize:none;
 }
 
 .message-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
     resize:none;
 }
 
-.message-item .content {
-    width: 80%;
-    resize:none;
+.message-item .username,
+.message-item .message-content {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
 }
 
-.message-item .time {
-    color: #aaa;
+.message-item .message-content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.message-item .message-time {
+    align-self: flex-end;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: right;
+    color: #888;
     font-size: 12px;
-    resize:none;
+    line-height: 1.5;
+}
+
+.post-content-error { color: #b42345; font-size: 14px; margin: 0 0 12px; }
+.home-page > .container { width: min(450px, calc(100% - 24px)); min-width: 0; }
+.home-account-actions { position: absolute; top: 20px; right: 30px; }
+@media (max-width: 600px) {
+    .home-page > .container { padding: 24px 16px; margin-top: 20px; }
+    .home-page .message-board { padding: 12px; }
+    .home-account-actions { position: static; width: calc(100% - 24px); margin-top: 54px; }
 }
 .btn-about {
     display: inline-block;

@@ -90,7 +90,7 @@ public class ChatWebSocket {
         });
     }
 
-    public static void pushMessage(long id, int senderId, Integer receiverId, String senderName,
+    public static Map<String, Object> pushMessage(long id, int senderId, Integer receiverId, String senderName,
                                    String avatar, String content, String imageUrl, String time) {
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("id", id);
@@ -104,5 +104,6 @@ public class ChatWebSocket {
         String json = new Gson().toJson(message);
         if (receiverId == null || receiverId == -1) broadcastToAll(json);
         else sendPrivateMessage(senderId, receiverId, json);
+        return message;
     }
 }
